@@ -1,0 +1,26 @@
+Instructions (assuming nodejs, sqlite3 are install
+create directory for web pages
+open command prompt window and go to created directory
+type the following commands in command prompt
+npm install express
+npm install express-validator
+npm install sqlite3
+
+build database by running node with createdb command below type it in the command prompt
+node createdb.js
+
+Start serving the page command
+node index-en.js
+
+
+
+Things still required
+auto populate or load new screen with roe info added
+add name fields, and application date(type in or date picker) to the bootstrap.html
+add the name fields to the index-en.js insert statement,
+add javascript to indes-en.js to calculate dates and add them to the insert statement
+instead of using 2 sin fields add an extra button to check for the roe.
+
+Tell me if you get this done and I will get you to help with more
+
+
