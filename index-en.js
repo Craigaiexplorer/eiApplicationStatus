@@ -6,6 +6,17 @@ const sqlite3 = require('sqlite3').verbose();
 const util = require('util');
 var fs = require('fs');
 
+var varHeader = fs.readFileSync('header.html','utf8');
+
+var varTitle = fs.readFileSync('mainStatusTitle.html','utf8');
+var imghtml = fs.readFileSync('img.html','utf8');
+
+var percirclehtml = fs.readFileSync('percircle.html','utf8');
+
+
+
+var varFooter = fs.readFileSync('footer.html','utf8');
+
 function benefit_paid(varEarnings){
     return (varEarnings * 0.55/22);
     }
@@ -37,13 +48,7 @@ function DetApplicationStatus(roeHours, regReqHours){
 
 function pushApproved(res, EstWeeklyPayment, EstStartDate,ApplicationNum ){
 
-var varHeader = fs.readFileSync('header.html','utf8');
 
-var varTitle = fs.readFileSync('mainStatusTitle.html','utf8');
-var imghtml = fs.readFileSync('img.html','utf8');
-
-
-var varFooter = fs.readFileSync('footer.html','utf8');
 
     res.write('<html>'); //write a response to the client
     res.write(varHeader);
@@ -76,9 +81,12 @@ var varFooter = fs.readFileSync('footer.html','utf8');
   res.write('<html>'); //write a response to the client
   res.write(varHeader);
  // res.write(varTitle);
+
+
+
   res.write('<h4 style="text-align:center"> '+ message +' </h4>')
 
-//  res.write('percircle');
+  res.write(percirclehtml);
 
 
   res.write('<p>Estimated follow-up date: ' )
@@ -89,10 +97,27 @@ var varFooter = fs.readFileSync('footer.html','utf8');
   res.write('</html>');
   res.end(); //end the response
 }
-function getTableData(result) {
-                console.log(result);
-                };
-var result;
+function pagePushLogic(req,res) {
+    if(req.body.reason == 'Voluntary')
+        {
+            varMessage = 'Please provide more information'
+             pushMoreInfo(res, varMessage, (Math.random()*10000000).toFixed(0))
+
+        }
+        else
+        {
+        if(varAppStatus == 'approved'){
+            pushApproved(res,totBenPd.toFixed(2),'1900-01-01',(Math.random()*10000000).toFixed(0));
+          }
+          else
+          {
+            varMessage = 'Sorry you do not have enough hours  (required hours outstanding for region calculation)'
+            pushMoreInfo(res, varMessage, (Math.random()*10000000).toFixed(0))
+          }
+         }
+
+};
+
 
 // open database in memory
 let db = new sqlite3.Database('eiStatusApp.db', (err) => {
@@ -178,6 +203,8 @@ app.post('/sin-check', (req, res) =>
                     DetApplicationStatus(varHours, row.reqHours) ;
                    //varEICharRow = [row.reqName, row.reqHours]
                    console.log('done funct')
+                   pagePushLogic(req,res)
+                   console.log('done push')
                    totBenPd = benefit_paid(varEarnings);
                    insertSql.run(sinVar,varAppStatus,req.body.hours, req.body.earnings,req.body.HomeRegion);
                    insertSql.finalize();
@@ -203,14 +230,7 @@ app.post('/sin-check', (req, res) =>
 
 
         });
-        if(varAppStatus == 'approved'){
-            pushApproved(res,totBenPd.toFixed(2),'1900-01-01',(Math.random()*10000000).toFixed(0));
-          }
-          else
-          {
-            varMessage = 'Soo sleepy'
-            pushMoreInfo(res, varMessage, (Math.random()*10000000).toFixed(0))
-          }
+
         //res.write('<html>' + '<p>Total Benefit:'+ totBenPd.toFixed(2) + 'Ben Start:' + benStartDate +'</html>');
 
 
@@ -222,5 +242,5 @@ app.post('/sin-check', (req, res) =>
             console.log('Close the database connection.');
             });
         });
-app.listen(5001);
-//app.listen(5000, '192.168.1.15'||'localhost');
+//app.listen(5001);
+app.listen(5001, '192.168.1.23'||'localhost');
