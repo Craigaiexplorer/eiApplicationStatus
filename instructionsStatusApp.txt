@@ -6,13 +6,15 @@ npm install express
 npm install express-validator
 npm install sqlite3
 
+move all image files into asset directory for image server to servethem
+
 check the rows in the sqlite database  the region characteristic table should have all rows from the january 2020 open dataset.  
 the application table may have row which can be removed.
 
-Start image server
-node imgserver.js
+Start image server runs on port 5000, so that port must not be currently in use
+node imgserver.js  
 
-Start serving the page command
+Start serving the page command runs on port 5001, so that port must not be currently in use
 node index-en.js
 
 
