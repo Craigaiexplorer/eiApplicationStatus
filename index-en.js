@@ -191,11 +191,11 @@ function pushConfirmPage(req,res,confSIN,confFirstNm,confLastNm,confRegion,confH
     res.write('<input type="text" id="HomeRegion" name="HomeRegion" class="form-control" value="' + confRegion + '">')
     res.write('</div></div>')
 
-    res.write('<div class="form-group"> <label for="reason" class="col-sm-3 control-label">Home Region code<code></code></label><div class="col-sm-9">')
+    res.write('<div class="form-group"> <label for="reason" class="col-sm-3 control-label">Reason out of work<code></code></label><div class="col-sm-9">')
     res.write('<input type="text" id="reason" name="reason" class="form-control" value="' + confReason + '">')
     res.write('</div></div>')
 
-    res.write('<div class="form-group"> <label for="reason" class="col-sm-3 control-label">Home Region code<code></code></label><div class="col-sm-9">')
+    res.write('<div class="form-group"> <label for="reason" class="col-sm-3 control-label">Application date(demo only)<code></code></label><div class="col-sm-9">')
     res.write('<input type="date" id="appDate" name="appDate"  value="2020-01-22"  min="2020-01-01" max="2020-12-31">')
     res.write('</div></div>')
 
@@ -218,13 +218,8 @@ function pushConfirmPage(req,res,confSIN,confFirstNm,confLastNm,confRegion,confH
     res.end(); //end the response
 }
 // open database
-let db = new sqlite3.Database('eiStatusApp.db', (err) => {
-  if (err) {
-    return console.error(err.message);
-  }
-  console.log('Connected to the EI DB SQlite database.');
+var db
 
-  });
 
 
 
@@ -243,7 +238,7 @@ let sqlgetregionchar = `SELECT EI_Eco_region_code as regName, num_insured_hours_
 
 
 
-var insertSql = db.prepare("INSERT INTO applicationStatus(sin, ei_app_status, unconf_tot_hours, unconf_tot_earnings, emp_address_region) VALUES(?,?,?,?,?)");
+
 var appStartDate = '';
 
 var benStartDate = '';
@@ -258,19 +253,26 @@ var varEICharRow =[];
 
 
 app.get('/', function(request, response){
-    response.sendFile('C:/web/sinonly.html');
+    response.sendFile(__dirname +'/sinonly.html');
 });
 app.use(express.urlencoded());
 var totBenPd = '';
 app.post('/sin-check', (req, res) =>
 {
+        db = new sqlite3.Database('eiStatusApp.db', (err) => {
+            if (err) {
+                return console.error(err.message);
+            }
+            console.log('Connected to the EI DB SQlite database.');
+         });
+
         console.log('start sin check')
         const sinVar = req.body.sinroe;
         console.log('caught sin:' + sinVar);
         db.serialize(() => {
             db.get(sql, [sinVar], (err, row) => {
                    if (err) {
-                       res.sendFile('C:/web/bootstrap.html');
+                       res.sendFile(__dirname +'/bootstrap.html');
                     }
                     return row
             ? pushConfirmPage(req,res,row.Sin,row.emp_name_first,row.emp_name_last,row.emp_address_region,row.tot_hours,row.tot_earnings,row.reason)
@@ -308,6 +310,7 @@ app.post('/sin-check', (req, res) =>
                    pagePushLogic(req,res)
                    console.log('done push')
                    totBenPd = benefit_paid(varEarnings);
+                   var insertSql = db.prepare("INSERT INTO applicationStatus(sin, ei_app_status, unconf_tot_hours, unconf_tot_earnings, emp_address_region) VALUES(?,?,?,?,?)");
                    insertSql.run(sinVar,varAppStatus,req.body.hours, req.body.earnings,req.body.HomeRegion);
                    insertSql.finalize();
                    console.log('back from insert');
@@ -335,14 +338,14 @@ app.post('/sin-check', (req, res) =>
 
         //res.write('<html>' + '<p>Total Benefit:'+ totBenPd.toFixed(2) + 'Ben Start:' + benStartDate +'</html>');
 
-
-        // close the database connection
+          // close the database connection
        db.close((err) => {
             if (err) {
             return console.error(err.message);
             }
             console.log('Close the database connection.');
             });
+
 
         });
     app.post('/schedule', (req, res) =>
@@ -351,5 +354,6 @@ app.post('/sin-check', (req, res) =>
     });
 
 //}
+
 app.listen(5001);
 //app.listen(5001, '192.168.1.23'||'localhost');
